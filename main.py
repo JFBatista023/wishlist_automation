@@ -22,6 +22,7 @@ class Product(BaseModel):
     alert_price: Optional[float] = None
 
 
+# Edit the list with the products you want
 products = [
     Product(name="Redmi Watch 3 Active",
             url="https://pt.aliexpress.com/item/1005005655136135.html?gatewayAdapt=glo2bra", alert_price=160.00),
@@ -29,7 +30,7 @@ products = [
             url="https://pt.aliexpress.com/item/1005006086958220.html?gatewayAdapt=glo2bra", alert_price=260.00),
     Product(name="AULA F75",
             url="https://pt.aliexpress.com/item/1005006907892071.html?gatewayAdapt=glo2bra", alert_price=260.00),
-    Product(name="Attach Shark K86 1k vendido",
+    Product(name="Attach Shark K86 1k vendidos",
             url="https://pt.aliexpress.com/item/1005006086926348.html?gatewayAdapt=glo2bra", alert_price=260.00),
     Product(name="Redragon KS82-B",
             url="https://pt.aliexpress.com/item/1005005483117627.html?gatewayAdapt=glo2bra", alert_price=260.00),
@@ -54,7 +55,7 @@ def fetch_product_price(url: str, driver) -> float:
     raw_price_xpath = '/html/body/div[6]/div/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[1]/span'
     tax_price_xpath = '/html/body/div[6]/div/div[1]/div/div[1]/div[1]/div[2]/div[3]/a'
 
-    discount_per_piece_element = get_element(driver, By.XPATH, discount_per_piece_xpath, retry=1, wait_time=6)
+    discount_per_piece_element = get_element(driver, By.XPATH, discount_per_piece_xpath, retry=1, wait_time=6) # It is normal for the result of this function to give Timeout
     if discount_per_piece_element is not None:
         raw_price_xpath = '/html/body/div[6]/div/div[1]/div/div[1]/div[1]/div[2]/div[1]/div[1]/span'
         tax_price_xpath = '/html/body/div[6]/div/div[1]/div/div[1]/div[1]/div[2]/div[2]/a'
@@ -78,23 +79,24 @@ def send_whatsapp_message(message: str):
 
 
 async def main(driver):
-    telegram_message = ""
-    whatsapp_message = ""
+    while True:
+        telegram_message = ""
+        whatsapp_message = ""
 
-    for product in products:
-        price = fetch_product_price(product.url, driver)
-        telegram_message += f"{product.name}: R$ {price}\n"
+        for product in products:
+            price = fetch_product_price(product.url, driver)
+            telegram_message += f"{product.name}: R$ {price}\n"
 
-        if product.alert_price and price <= product.alert_price:
-            whatsapp_message += f"Atenção! {product.name} está agora por R$ {price}\n"
-            whatsapp_message += f"Aqui está o link: {product.url}\n"
+            if product.alert_price and price <= product.alert_price:
+                whatsapp_message += f"Atenção! {product.name} está agora por R$ {price}\n"
+                whatsapp_message += f"Aqui está o link: {product.url}\n"
 
-    driver.quit()
+        await send_telegram_message(telegram_message)
 
-    await send_telegram_message(telegram_message)
+        if whatsapp_message:
+            send_whatsapp_message(whatsapp_message)
 
-    if whatsapp_message:
-        send_whatsapp_message(whatsapp_message)
+        time.sleep(3600)
 
 
 if __name__ == "__main__":
@@ -114,3 +116,4 @@ if __name__ == "__main__":
     chrome_options.page_load_strategy = 'none'
     chrome_driver = webdriver.Chrome(service=service, options=chrome_options)
     asyncio.run(main(chrome_driver))
+    chrome_driver.quit()
