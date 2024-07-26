@@ -72,10 +72,12 @@ async def send_telegram_message(message: str):
     bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
     async with bot:
         await bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
+    print('Telegram message sent successfully!')
 
 
 def send_whatsapp_message(message: str):
     kit.sendwhatmsg_instantly(WHATSAPP_NUMBER, message)
+    print('Whatsapp message sent successfully!')
 
 
 async def main(driver):
